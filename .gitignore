@@ -1,62 +1,15 @@
-# Prerequisites
-*.d
+#ignore all files even in sub directories
+*
 
-# Object files
-*.o
-*.ko
-*.obj
-*.elf
+#except .c and .cpp files and .gitignore make files etc
+!*.c
+!*.cpp
+!*.h
+!*.gitignore
+!Makefile
+!makefile
+!config.mk
+!*.md
 
-# Linker output
-*.ilk
-*.map
-*.exp
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Libraries
-*.lib
-*.a
-*.la
-*.lo
-
-# Shared objects (inc. Windows DLLs)
-*.dll
-*.so
-*.so.*
-*.dylib
-
-# Executables
-*.exe
-*.out
-*.app
-*.i*86
-*.x86_64
-*.hex
-
-# Debug files
-*.dSYM/
-*.su
-*.idb
-*.pdb
-
-# Kernel Module Compile Results
-*.mod*
-*.cmd
-.tmp_versions/
-modules.order
-Module.symvers
-Mkfile.old
-dkms.conf
-
-#txt files
-*.txt
-
-#json
-*.json
-
-#videos
-*.mkv
-*.avi
+# ...even if they are in subdirectories
+!*/
