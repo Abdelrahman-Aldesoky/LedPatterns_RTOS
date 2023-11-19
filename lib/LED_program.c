@@ -27,7 +27,7 @@ LedPattern Patterns[] =
 		/*index 0 in my array of structs will contain the off signal default behaviour*/
 		{1000, {0, -1}},
 		/*index 1 in my array of structs contains flashing pattern with 500ms delay.*/
-		{500, {255, 0, -1}},
+		{1000, {255, 0, -1}},
 
 		/*index 2 in my array of structs contains moving left with 250ms delay.*/
 		{250, {128, 64, 32, 16, 8, 4, 2, 1, -1}},
@@ -89,9 +89,9 @@ void LED_voidActivatePattern(void *ptr)
 			 changed the active state and update the pattern length for correctness of display*/
 		else if (Global_u8ReceivedState < Local_u8TotalNoOfPatterns && Global_u8ReceivedState >= 0)
 		{
-			Local_u8ActiveLEDsState = Global_u8ReceivedState;
 			Local_u8PatternLength = 0;
-			/*Getting the Actual Pattern Length for my active Pattern*/
+			Local_u8ActiveLEDsState = Global_u8ReceivedState;
+			/*Getting the Actual Pattern Length for the choosen Pattern*/
 			while ((Patterns[Local_u8ActiveLEDsState].pattern[Local_u8PatternLength]) != -1)
 			{
 				Local_u8PatternLength++;
@@ -99,7 +99,7 @@ void LED_voidActivatePattern(void *ptr)
 		} /*if none of the above must be an error turn all the lEDs on*/
 		else
 		{
-			/*standby / error pattern*/
+			/*error pattern*/
 			DIO_voidSetPortValue(LED_PORT, PORT_VALUE_HIGH);
 		}
 		vTaskDelay(1);
