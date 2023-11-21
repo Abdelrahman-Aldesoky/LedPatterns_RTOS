@@ -3,7 +3,6 @@
 /********************Ver.: 01********************/
 /****************Date:17/08/2023.****************/
 /************************************************/
-
 #include "../inc/STD_TYPES.h"
 #include "../inc/BIT_MATH.h"
 #include "DIO_interface.h"
@@ -11,14 +10,12 @@
 #include "LED_private.h"
 #include "LED_config.h"
 #include "LED_interface.h"
-
 #include "FreeRTOS.h"
 #include "task.h"
 
 /*Global Variable To hold the received char or input from UART
 mapping it to my array of structs index's */
 u8 Global_u8ReceivedState = 0;
-
 /*Creating array of structs named patterns
 each struct can hold an array for the pattern sequence and the used delay for that pattern
 you can check the struct in LED_interface.h File
@@ -62,13 +59,11 @@ void LED_voidInit(void)
 	/*Set Led Port direction as output*/
 	DIO_voidSetPortDirection(LED_PORT, PORT_DIRECTION_OUTPUT);
 }
-
 /*Checking what does my UDR register in UART Holds it gets called on received data on interrupts*/
 void LED_voidCheckState(void)
 {
 	Global_u8ReceivedState = (USART_u8ReceiveDataOnInterrupt() - '0');
 }
-
 /*My main Function that acts upon my global variable that holds what state
 my lEDs should be animating.*/
 void LED_voidActivatePattern(void *ptr)
@@ -76,13 +71,8 @@ void LED_voidActivatePattern(void *ptr)
 	/*just a variable for future use if needed in case of a condition
 	 *that tells me i can only show the patterns that is higher in the index and not lower.*/
 	u8 static Local_u8ActiveLEDsState = 0;
-
 	/*Iterator to go over the whole choosen pattern depends on how long is the pattern*/
 	u8 static Local_u8Iterator = 0;
-
-	/*Elapsed_time Variable to check if reached the correct delay to start on the next sequence in the Pattern*/
-	u16 static Local_u16ElapsedTime = 0;
-
 	/*Getting the total number of my patterns instead of hardcoding it*/
 	u8 static const Local_u8TotalNoOfPatterns = sizeof(Patterns) / sizeof(Patterns[0]);
 
@@ -96,42 +86,15 @@ void LED_voidActivatePattern(void *ptr)
 		if (VALID_LED_PATTERN)
 		{
 			Local_u8ActiveLEDsState = Global_u8ReceivedState;
-			Local_u8Iterator = 0;
-			Local_u16ElapsedTime = 0;
 		}
-
-		/*if the the current pattern[Local_u8Iterator] reached its appointed delay
-		 *if an element from the pattern array is done in plain english words elapsed time reached delay
-		 *Reset elapsed time variable to start over on the next element in the array by increasing the iterator*/
-		if (Local_u16ElapsedTime == Patterns[Local_u8ActiveLEDsState].delay)
+		/*for loop to display "turn on LEDs" based on the received pattern with the correct delay
+		 *until you reach end of pattern (EOP) which is equals -1
+		 *this is the original Approach which checked for change in patterns only when the pattern
+		 *is completely displayed better for cpu usage but the requirements wants to check and change every 1ms*/
+		for (Local_u8Iterator = 0; Patterns[Local_u8ActiveLEDsState].pattern[Local_u8Iterator] != EOP; Local_u8Iterator++)
 		{
-			Local_u8Iterator++;
-			Local_u16ElapsedTime = 0;
+			DIO_voidSetPortValue(LED_PORT, Patterns[Local_u8ActiveLEDsState].pattern[Local_u8Iterator]);
+			vTaskDelay(Patterns[Local_u8ActiveLEDsState].delay);
 		}
-
-		/*If at End Of Pattern marked by EOP or -1 actual value start over
-		 *Repeat the pattern by going to index 0 in the pattern array.*/
-		if (Patterns[Local_u8ActiveLEDsState].pattern[Local_u8Iterator] == EOP)
-		{
-			Local_u8Iterator = 0;
-		}
-
-		/*After all the check are done Just Display the Active Pattern*/
-		DIO_voidSetPortValue(LED_PORT, Patterns[Local_u8ActiveLEDsState].pattern[Local_u8Iterator]);
-		/*increase my elapsed time by 1ms*/
-		Local_u16ElapsedTime++;
-		/*Let the task go to sleep for 1ms, this and elapsed time should be the same
-		 *also this allows for 1ms checks if pattern changed or not but with higher cpu usage.
-		 *and more code for the manual for loop by if conditions.*/
-		vTaskDelay(1);
 	}
 }
-/*for loop to display "turn on LEDs" based on the received pattern with the correct delay
- *until you reach end of pattern (EOP) which is equals -1
- *this is the original Approach which checked for change in patterns only when the pattern
- *is completely displayed better for cpu usage but the requirements wants to check every 1ms*/
-// for (Local_u8Iterator = 0; Patterns[Local_u8ActiveLEDsState].pattern[Local_u8Iterator] != EOP; Local_u8Iterator++)
-// {
-// 	DIO_voidSetPortValue(LED_PORT, Patterns[Local_u8ActiveLEDsState].pattern[Local_u8Iterator]);
-// 	vTaskDelay(Patterns[Local_u8ActiveLEDsState].delay);
-// }
