@@ -7,8 +7,10 @@
 #ifndef LED_PRIVATE_H_
 #define LED_PRIVATE_H_
 
-#define RED_LED_IS_ON DIO_u8GetPinValue(RED_LED_PORT, RED_LED_PIN)
-#define YELLOW_LED_IS_ON DIO_u8GetPinValue(YELLOW_LED_PORT, YELLOW_LED_PIN)
-#define GREEN_LED_IS_ON DIO_u8GetPinValue(GREEN_LED_PORT, GREEN_LED_PIN)
+#define VALID_LED_PATTERN (Global_u8ReceivedState > Local_u8ActiveLEDsState &&    \
+                           Global_u8ReceivedState < Local_u8TotalNoOfPatterns) || \
+                              Global_u8ReceivedState == 0
+
+#define EOP -1
 
 #endif

@@ -12,46 +12,36 @@
 #include "USART_config.h"
 #include "USART_interface.h"
 
-static void (*Global_ptrtofunc)(void)=NULL;
+/*Global ptr to function for the callback*/
+static void (*Global_ptrtofunc)(void) = NULL;
 
 void USART_voidInit(void)
 {
+	/*Enable Global interrupts since iam going to be using interrupts on Receive*/
 	GIE_voidEnable();
-	UCSRB |= (1 << UCSRB_RXCIE) | (1 << UCSRB_RXEN) | (1 << UCSRB_TXEN); // Turn on the transmission reception ..
-	// circuitry and receiver interrupt
-	UCSRC |= (1 << UCSRC_URSEL) | (1 << UCSRC_UCSZ0) | (1 << UCSRC_UCSZ1); // Use 8-bit character sizes
-	UBRRL = 51;															   // Load lower 8-bits of the baud rate value..
-	// into the low byte of the UBRR register
-	UBRRH = 0; // Load upper 8-bits of the baud rate value..
-	// into the high byte of the UBRR register
-	// Set Frame Format -> 8 data, 1 stop, No Parity
+
+	/*Enable RXCIE interrupt on Receive
+	 *Enable RXEN Receive
+	 *Enable TXEN Transmit*/
+	UCSRB |= (1 << UCSRB_RXCIE) | (1 << UCSRB_RXEN) | (1 << UCSRB_TXEN);
+
+	/*Select 8 Bit Character Size*/
+	UCSRC |= (1 << UCSRC_URSEL) | (1 << UCSRC_UCSZ0) | (1 << UCSRC_UCSZ1);
+
+	/*Set Baud Rate for 9600*/
+	UBRRL = 51;
+	UBRRH = 0;
 }
 
-void USART_voidSend(u8 Copy_u8Data)
+/*just for abstraction to get my data from UDR without directly including my private
+file in other files*/
+u8 USART_u8ReceiveDataOnInterrupt(void)
 {
-	// Wait until transmission Register Empty
-	while ((GET_BIT(UCSRA, UCSRA_UDRE)) == 0X00)
-		;
-
-	// while((UCSRA&0x20) == 0x00);
-	UDR = Copy_u8Data;
+	return UDR;
 }
 
-u8 USART_voidReceive(void)
-{
-	u8 ReceivedData = 0;
-	// Wait until Reception Complete
-	while ((GET_BIT(UCSRA, UCSRA_RXC)) == 0)
-		;
-	// while((UCSRA&0x80) == 0x00);
-	ReceivedData = UDR;
-
-	/* Clear Flag */
-	SET_BIT(UCSRA, UCSRA_RXC);
-	return ReceivedData;
-}
-
-u8 USART_voidSetCallBack(void (*Copy_ptrtofunc)(void))
+/*my call back function for UART*/
+u8 USART_u8SetCallBack(void (*Copy_ptrtofunc)(void))
 {
 	u8 Local_u8Errorstate = OK;
 	if (Copy_ptrtofunc != NULL)
@@ -65,6 +55,7 @@ u8 USART_voidSetCallBack(void (*Copy_ptrtofunc)(void))
 	return Local_u8Errorstate;
 }
 
+/*Interrupt Handler*/
 void __vector_13(void) __attribute__((signal));
 
 void __vector_13(void)
